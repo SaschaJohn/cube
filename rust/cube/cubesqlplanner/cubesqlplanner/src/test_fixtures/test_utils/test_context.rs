@@ -51,6 +51,7 @@ impl TestContext {
             Some(Tz::UTC.to_string()),
             false,
             false,
+            false,
             None,
             None,
         )?;
@@ -132,6 +133,7 @@ impl TestContext {
             Some(timezone.to_string()),
             export_annotated_sql,
             convert_tz_for_raw_time_dimension,
+            false,
             masked_members,
             member_to_alias,
         )?;

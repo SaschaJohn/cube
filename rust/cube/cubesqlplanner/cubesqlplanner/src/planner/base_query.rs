@@ -57,6 +57,7 @@ impl<IT: InnerTypes> BaseQuery<IT> {
                 .static_data()
                 .convert_tz_for_raw_time_dimension
                 .unwrap_or(false),
+            options.static_data().include_links.unwrap_or(false),
             options.static_data().masked_members.clone(),
             options.static_data().member_to_alias.clone(),
         )?;

@@ -1,5 +1,6 @@
 use super::case_variant::CaseVariant;
 use super::geo_item::{GeoItem, NativeGeoItem};
+use super::link_item::{LinkItem, NativeLinkItem};
 use super::member_sql::{MemberSql, NativeMemberSql};
 use crate::cube_bridge::timeshift_definition::{NativeTimeShiftDefinition, TimeShiftDefinition};
 use cubenativeutils::wrappers::serializer::{
@@ -51,4 +52,7 @@ pub trait DimensionDefinition {
 
     #[nbridge(field, optional)]
     fn mask_sql(&self) -> Result<Option<Rc<dyn MemberSql>>, CubeError>;
+
+    #[nbridge(field, vec, optional)]
+    fn links(&self) -> Result<Option<Vec<Rc<dyn LinkItem>>>, CubeError>;
 }

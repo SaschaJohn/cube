@@ -43,6 +43,7 @@ pub struct DimensionSymbol {
     is_sub_query: bool,
     propagate_filters_to_sub_query: bool,
     mask_sql: Option<Rc<SqlCall>>,
+    link_url_sqls: Vec<Rc<SqlCall>>,
 }
 
 impl DimensionSymbol {
@@ -59,6 +60,7 @@ impl DimensionSymbol {
         is_sub_query: bool,
         propagate_filters_to_sub_query: bool,
         mask_sql: Option<Rc<SqlCall>>,
+        link_url_sqls: Vec<Rc<SqlCall>>,
     ) -> Rc<Self> {
         Rc::new(Self {
             compiled_path,
@@ -73,6 +75,7 @@ impl DimensionSymbol {
             is_sub_query,
             propagate_filters_to_sub_query,
             mask_sql,
+            link_url_sqls,
         })
     }
 
@@ -172,6 +175,10 @@ impl DimensionSymbol {
     /// output to mask its value (data hiding / column-level masking).
     pub fn mask_sql(&self) -> &Option<Rc<SqlCall>> {
         &self.mask_sql
+    }
+
+    pub fn link_url_sqls(&self) -> &Vec<Rc<SqlCall>> {
+        &self.link_url_sqls
     }
 
     pub fn add_group_by(&self) -> &Option<Vec<Rc<MemberSymbol>>> {
@@ -542,6 +549,15 @@ impl SymbolFactory for DimensionSymbolFactory {
             .propagate_filters_to_sub_query
             .unwrap_or(false);
 
+        let link_url_sqls = if let Some(links) = definition.links()? {
+            links
+                .iter()
+                .map(|link| compiler.compile_sql_call(path.cube_name(), link.url()?))
+                .collect::<Result<Vec<_>, _>>()?
+        } else {
+            vec![]
+        };
+
         let cube_symbol = compiler.add_cube_table_evaluator(path.cube_name().clone(), vec![])?;
 
         let compiled_path = CompiledMemberPath::new(
@@ -565,6 +581,7 @@ impl SymbolFactory for DimensionSymbolFactory {
             is_sub_query,
             propagate_filters_to_sub_query,
             mask_sql,
+            link_url_sqls,
         ));
 
         if let Some(granularity) = path.granularity() {

@@ -962,6 +962,7 @@ export class BaseQuery {
       convertTzForRawTimeDimension: !!this.options.convertTzForRawTimeDimension,
       maskedMembers: this.options.maskedMembers,
       memberToAlias: this.options.memberToAlias,
+      includeLinks: this.options.includeLinks,
     };
 
     try {
