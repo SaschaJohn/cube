@@ -313,7 +313,7 @@ const MaskSchema = Joi.alternatives([
 
 const LinkItemSchema = Joi.object().keys({
   label: Joi.string().required(),
-  url: Joi.string().required(),
+  url: Joi.func().required(),
   icon: Joi.string(),
   target: Joi.string().valid('blank', 'self'),
   params: Joi.object().pattern(Joi.string(), Joi.string()),

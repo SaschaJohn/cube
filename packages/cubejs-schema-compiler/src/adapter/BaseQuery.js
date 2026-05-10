@@ -3223,63 +3223,12 @@ export class BaseQuery {
       if (!dimDef || !dimDef.links) continue;
 
       dimDef.links.forEach((link, idx) => {
-        const urlSql = this.buildLinkUrlSql(cubeName, link);
+        const urlSql = this.autoPrefixAndEvaluateSql(cubeName, link.url);
         const alias = this.escapeColumnName(`${dimPath}___link_${idx}_url`);
         columns.push(`${urlSql} ${alias}`);
       });
     }
     return columns;
-  }
-
-  buildLinkUrlSql(cubeName, link) {
-    const urlTemplate = link.url;
-    const parts = this.parseLinkUrlTemplate(urlTemplate);
-    const sqlParts = parts.map(part => {
-      if (part.type === 'literal') {
-        return this.escapeString(part.value);
-      }
-      return this.castToString(this.resolveReferenceInLink(cubeName, part.value));
-    });
-    return this.concatStringsSql(sqlParts);
-  }
-
-  parseLinkUrlTemplate(template) {
-    const parts = [];
-    let current = '';
-    let i = 0;
-    while (i < template.length) {
-      if (template[i] === '{') {
-        if (current) {
-          parts.push({ type: 'literal', value: current });
-          current = '';
-        }
-        i++;
-        let ref = '';
-        while (i < template.length && template[i] !== '}') {
-          ref += template[i];
-          i++;
-        }
-        i++;
-        parts.push({ type: 'reference', value: ref });
-      } else {
-        current += template[i];
-        i++;
-      }
-    }
-    if (current) {
-      parts.push({ type: 'literal', value: current });
-    }
-    return parts;
-  }
-
-  resolveReferenceInLink(cubeName, ref) {
-    const fullPath = ref.includes('.') ? ref : `${cubeName}.${ref}`;
-    const [refCube, refMember] = fullPath.split('.');
-    if (this.cubeEvaluator.isDimension(fullPath)) {
-      const dimDef = this.cubeEvaluator.dimensionByPath(fullPath);
-      return this.autoPrefixAndEvaluateSql(refCube, dimDef.sql);
-    }
-    return this.escapeString(ref);
   }
 
   escapeString(str) {

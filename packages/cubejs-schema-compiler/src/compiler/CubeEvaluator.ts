@@ -34,7 +34,7 @@ export type SegmentDefinition = {
 
 export type LinkDefinition = {
   label: string;
-  url: string;
+  url: (...args: any[]) => string;
   icon?: string;
   target?: 'blank' | 'self';
   params?: Record<string, string>;

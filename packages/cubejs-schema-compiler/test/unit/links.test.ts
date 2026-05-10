@@ -18,11 +18,11 @@ cubes:
         type: string
         links:
           - label: Search on Google
-            url: "https://www.google.com/search?q={full_name}"
+            url: "CONCAT('https://www.google.com/search?q=', {CUBE}.full_name)"
             icon: brand-google
             target: blank
           - label: Write an email
-            url: "mailto:{email}"
+            url: "CONCAT('mailto:', {email})"
             icon: send
 
       - name: email
@@ -64,7 +64,7 @@ cubes:
     expect(sql).not.toContain('___link_');
   });
 
-  it('should resolve dimension references in link URL templates', async () => {
+  it('should resolve dimension references in link URL sql', async () => {
     const compilers = prepareYamlCompiler(schemaWithLinks);
     await compilers.compiler.compile();
 
@@ -77,7 +77,7 @@ cubes:
     const queryAndParams = query.buildSqlAndParams();
     const sql = queryAndParams[0];
 
-    // The {full_name} reference should be resolved to the SQL for the full_name dimension
+    // The {CUBE}.full_name reference should be resolved to the SQL column
     expect(sql).toContain('"users".full_name');
     // The {email} reference should be resolved to the SQL for the email dimension
     expect(sql).toContain('"users".email');
@@ -99,11 +99,9 @@ cubes:
     expect(fullNameDim!.links).toBeDefined();
     expect(fullNameDim!.links).toHaveLength(2);
     expect(fullNameDim!.links![0].label).toBe('Search on Google');
-    expect(fullNameDim!.links![0].url).toBe('https://www.google.com/search?q={full_name}');
     expect(fullNameDim!.links![0].icon).toBe('brand-google');
     expect(fullNameDim!.links![0].target).toBe('blank');
     expect(fullNameDim!.links![1].label).toBe('Write an email');
-    expect(fullNameDim!.links![1].url).toBe('mailto:{email}');
     expect(fullNameDim!.links![1].icon).toBe('send');
     expect(fullNameDim!.links![1].target).toBe('blank');
   });
@@ -136,7 +134,7 @@ cubes:
         sql: full_name
         type: string
         links:
-          - url: "https://example.com"
+          - url: "'https://example.com'"
 `;
     const compilers = prepareYamlCompiler(invalidSchema);
 
