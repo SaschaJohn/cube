@@ -51,6 +51,15 @@ export interface ExtendedCubeSymbolDefinition extends CubeSymbolDefinition {
   aggType?: string;
   keyReference?: string;
   currency?: string;
+  links?: Array<{
+    label: string;
+    url: string;
+    icon?: string;
+    target?: 'blank' | 'self';
+    params?: Record<string, string>;
+    propagate_filters_to_params?: boolean;
+    param_name_for_filters?: string;
+  }>;
 }
 
 interface ExtendedCubeDefinition extends CubeDefinitionExtended {
@@ -97,6 +106,16 @@ export type MeasureConfig = {
   public: boolean;
 };
 
+export type LinkConfig = {
+  label: string;
+  url: string;
+  icon?: string;
+  target: 'blank' | 'self';
+  params?: Record<string, string>;
+  propagate_filters_to_params: boolean;
+  param_name_for_filters: string;
+};
+
 export type DimensionConfig = {
   name: string;
   title: string;
@@ -115,6 +134,7 @@ export type DimensionConfig = {
   granularities?: GranularityDefinition[];
   order?: 'asc' | 'desc';
   key?: string;
+  links?: LinkConfig[];
 };
 
 export type SegmentConfig = {
@@ -314,6 +334,15 @@ export class CubeToMetaTransformer implements CompilerInterface {
                 : undefined,
             order: extendedDimDef.order,
             key: extendedDimDef.keyReference,
+            links: extendedDimDef.links ? extendedDimDef.links.map((link: any) => ({
+              label: link.label,
+              url: link.url,
+              icon: link.icon,
+              target: link.target || 'blank',
+              params: link.params,
+              propagate_filters_to_params: link.propagate_filters_to_params !== false,
+              param_name_for_filters: link.param_name_for_filters || 'filters',
+            })) : undefined,
           };
         }),
         segments: Object.entries(extendedCube.segments || {}).map((nameToSegment: [string, any]) => {

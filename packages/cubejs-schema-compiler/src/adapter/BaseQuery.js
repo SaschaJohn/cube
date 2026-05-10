@@ -286,6 +286,7 @@ export class BaseQuery {
       memberToAlias: this.options.memberToAlias,
       expressionParams: this.options.expressionParams,
       convertTzForRawTimeDimension: this.options.convertTzForRawTimeDimension,
+      includeLinks: this.options.includeLinks,
       from: this.options.from,
       multiStageQuery: this.options.multiStageQuery,
       multiStageDimensions: this.options.multiStageDimensions,
@@ -3183,7 +3184,11 @@ export class BaseQuery {
   }
 
   baseSelect() {
-    return R.flatten(this.forSelect().map(s => s.selectColumns())).filter(s => !!s).join(', ');
+    const columns = R.flatten(this.forSelect().map(s => s.selectColumns())).filter(s => !!s);
+    if (this.options.includeLinks) {
+      columns.push(...this.linkUrlSelectColumns());
+    }
+    return columns.join(', ');
   }
 
   selectAllDimensionsAndMeasures(measures) {
@@ -3205,6 +3210,80 @@ export class BaseQuery {
    */
   dimensionsForSelect() {
     return this.dimensions.concat(this.timeDimensions);
+  }
+
+  linkUrlSelectColumns() {
+    const columns = [];
+    for (const dim of this.dimensionsForSelect()) {
+      const dimPath = dim.dimension || (dim.path && dim.path().join('.'));
+      if (!dimPath) continue;
+
+      const cubeName = dim.path ? dim.path()[0] : dimPath.split('.')[0];
+      const dimDef = dim.dimensionDefinition ? dim.dimensionDefinition() : null;
+      if (!dimDef || !dimDef.links) continue;
+
+      dimDef.links.forEach((link, idx) => {
+        const urlSql = this.buildLinkUrlSql(cubeName, link);
+        const alias = this.escapeColumnName(`${dimPath}___link_${idx}_url`);
+        columns.push(`${urlSql} ${alias}`);
+      });
+    }
+    return columns;
+  }
+
+  buildLinkUrlSql(cubeName, link) {
+    const urlTemplate = link.url;
+    const parts = this.parseLinkUrlTemplate(urlTemplate);
+    const sqlParts = parts.map(part => {
+      if (part.type === 'literal') {
+        return this.escapeString(part.value);
+      }
+      return this.castToString(this.resolveReferenceInLink(cubeName, part.value));
+    });
+    return this.concatStringsSql(sqlParts);
+  }
+
+  parseLinkUrlTemplate(template) {
+    const parts = [];
+    let current = '';
+    let i = 0;
+    while (i < template.length) {
+      if (template[i] === '{') {
+        if (current) {
+          parts.push({ type: 'literal', value: current });
+          current = '';
+        }
+        i++;
+        let ref = '';
+        while (i < template.length && template[i] !== '}') {
+          ref += template[i];
+          i++;
+        }
+        i++;
+        parts.push({ type: 'reference', value: ref });
+      } else {
+        current += template[i];
+        i++;
+      }
+    }
+    if (current) {
+      parts.push({ type: 'literal', value: current });
+    }
+    return parts;
+  }
+
+  resolveReferenceInLink(cubeName, ref) {
+    const fullPath = ref.includes('.') ? ref : `${cubeName}.${ref}`;
+    const [refCube, refMember] = fullPath.split('.');
+    if (this.cubeEvaluator.isDimension(fullPath)) {
+      const dimDef = this.cubeEvaluator.dimensionByPath(fullPath);
+      return this.autoPrefixAndEvaluateSql(refCube, dimDef.sql);
+    }
+    return this.escapeString(ref);
+  }
+
+  escapeString(str) {
+    return `'${str.replace(/'/g, "''")}'`;
   }
 
   dimensionSql(dimension) {

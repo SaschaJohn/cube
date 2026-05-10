@@ -32,6 +32,16 @@ export type SegmentDefinition = {
   multiStage?: boolean;
 };
 
+export type LinkDefinition = {
+  label: string;
+  url: string;
+  icon?: string;
+  target?: 'blank' | 'self';
+  params?: Record<string, string>;
+  propagate_filters_to_params?: boolean;
+  param_name_for_filters?: string;
+};
+
 export type DimensionDefinition = {
   type: string;
   sql(): string;
@@ -43,6 +53,7 @@ export type DimensionDefinition = {
   order?: 'asc' | 'desc';
   key?: (...args: any[]) => ToString;
   keyReference?: string;
+  links?: LinkDefinition[];
 };
 
 export type TimeShiftDefinition = {
