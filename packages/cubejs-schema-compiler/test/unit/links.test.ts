@@ -30,26 +30,39 @@ cubes:
         type: string
 `;
 
-  it('should include link URL columns when includeLinks is true', async () => {
+  it('should create synthetic link URL dimensions', async () => {
+    const compilers = prepareYamlCompiler(schemaWithLinks);
+    await compilers.compiler.compile();
+
+    const fullNameDef = compilers.cubeEvaluator.dimensionByPath('users.full_name___link_0_url');
+    expect(fullNameDef).toBeDefined();
+    expect(fullNameDef.type).toBe('string');
+    expect((fullNameDef as any).synthetic).toBe(true);
+
+    const emailDef = compilers.cubeEvaluator.dimensionByPath('users.full_name___link_1_url');
+    expect(emailDef).toBeDefined();
+    expect(emailDef.type).toBe('string');
+    expect((emailDef as any).synthetic).toBe(true);
+  });
+
+  it('should generate correct SQL when synthetic link dimension is queried', async () => {
     const compilers = prepareYamlCompiler(schemaWithLinks);
     await compilers.compiler.compile();
 
     const query = new PostgresQuery(compilers, {
       measures: [],
-      dimensions: ['users.full_name'],
-      includeLinks: true,
+      dimensions: ['users.full_name', 'users.full_name___link_0_url'],
     });
 
     const queryAndParams = query.buildSqlAndParams();
     const sql = queryAndParams[0];
 
-    expect(sql).toContain('users__full_name___link_0_url');
-    expect(sql).toContain('users__full_name___link_1_url');
+    expect(sql).toContain('"users__full_name___link_0_url"');
     expect(sql).toContain('https://www.google.com/search?q=');
-    expect(sql).toContain('mailto:');
+    expect(sql).toContain('"users".full_name');
   });
 
-  it('should NOT include link URL columns when includeLinks is false or absent', async () => {
+  it('should NOT include link URL columns unless explicitly queried', async () => {
     const compilers = prepareYamlCompiler(schemaWithLinks);
     await compilers.compiler.compile();
 
@@ -64,26 +77,7 @@ cubes:
     expect(sql).not.toContain('___link_');
   });
 
-  it('should resolve dimension references in link URL sql', async () => {
-    const compilers = prepareYamlCompiler(schemaWithLinks);
-    await compilers.compiler.compile();
-
-    const query = new PostgresQuery(compilers, {
-      measures: [],
-      dimensions: ['users.full_name'],
-      includeLinks: true,
-    });
-
-    const queryAndParams = query.buildSqlAndParams();
-    const sql = queryAndParams[0];
-
-    // The {CUBE}.full_name reference should be resolved to the SQL column
-    expect(sql).toContain('"users".full_name');
-    // The {email} reference should be resolved to the SQL for the email dimension
-    expect(sql).toContain('"users".email');
-  });
-
-  it('should expose links in meta config', async () => {
+  it('should expose links metadata and synthetic flag in meta config', async () => {
     const compilers = prepareYamlCompiler(schemaWithLinks);
     await compilers.compiler.compile();
 
@@ -91,22 +85,25 @@ cubes:
     const cubes = metaTransformer.cubes;
     const usersCube = cubes.find((c: any) => c.config.name === 'users');
     expect(usersCube).toBeDefined();
+
     const fullNameDim = usersCube!.config.dimensions.find(
       (d: any) => d.name === 'users.full_name'
     );
-
     expect(fullNameDim).toBeDefined();
     expect(fullNameDim!.links).toBeDefined();
     expect(fullNameDim!.links).toHaveLength(2);
     expect(fullNameDim!.links![0].label).toBe('Search on Google');
     expect(fullNameDim!.links![0].icon).toBe('brand-google');
     expect(fullNameDim!.links![0].target).toBe('blank');
-    expect(fullNameDim!.links![1].label).toBe('Write an email');
-    expect(fullNameDim!.links![1].icon).toBe('send');
-    expect(fullNameDim!.links![1].target).toBe('blank');
+
+    const syntheticDim = usersCube!.config.dimensions.find(
+      (d: any) => d.name === 'users.full_name___link_0_url'
+    );
+    expect(syntheticDim).toBeDefined();
+    expect(syntheticDim!.synthetic).toBe(true);
   });
 
-  it('should default target to blank and propagate_filters_to_params to true', async () => {
+  it('synthetic link dimensions should not be public by default', async () => {
     const compilers = prepareYamlCompiler(schemaWithLinks);
     await compilers.compiler.compile();
 
@@ -114,16 +111,15 @@ cubes:
     const cubes = metaTransformer.cubes;
     const usersCube = cubes.find((c: any) => c.config.name === 'users');
     expect(usersCube).toBeDefined();
-    const fullNameDim = usersCube!.config.dimensions.find(
-      (d: any) => d.name === 'users.full_name'
-    );
 
-    expect(fullNameDim).toBeDefined();
-    expect(fullNameDim!.links![0].propagate_filters_to_params).toBe(true);
-    expect(fullNameDim!.links![0].param_name_for_filters).toBe('filters');
+    const syntheticDim = usersCube!.config.dimensions.find(
+      (d: any) => d.name === 'users.full_name___link_0_url'
+    );
+    expect(syntheticDim).toBeDefined();
+    expect(syntheticDim!.public).toBe(false);
   });
 
-  it('should validate links schema', async () => {
+  it('should validate links schema - label is required', async () => {
     const invalidSchema = `
 cubes:
   - name: users

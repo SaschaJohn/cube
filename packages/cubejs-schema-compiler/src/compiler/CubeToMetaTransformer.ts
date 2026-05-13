@@ -60,6 +60,7 @@ export interface ExtendedCubeSymbolDefinition extends CubeSymbolDefinition {
     propagate_filters_to_params?: boolean;
     param_name_for_filters?: string;
   }>;
+  synthetic?: boolean;
 }
 
 interface ExtendedCubeDefinition extends CubeDefinitionExtended {
@@ -134,6 +135,7 @@ export type DimensionConfig = {
   order?: 'asc' | 'desc';
   key?: string;
   links?: LinkConfig[];
+  synthetic?: boolean;
 };
 
 export type SegmentConfig = {
@@ -341,6 +343,7 @@ export class CubeToMetaTransformer implements CompilerInterface {
               propagate_filters_to_params: link.propagate_filters_to_params !== false,
               param_name_for_filters: link.param_name_for_filters || 'filters',
             })) : undefined,
+            synthetic: extendedDimDef.synthetic || undefined,
           };
         }),
         segments: Object.entries(extendedCube.segments || {}).map((nameToSegment: [string, any]) => {

@@ -467,20 +467,8 @@ class ApiGateway {
         try {
           await this.assertApiScope('data', req.context?.securityContext);
 
-          if (req.body.includeLinks && req.context?.requestId) {
-            this.sqlServer.setRequestOption(req.context.requestId, 'includeLinks', true);
-          }
-
           await this.sqlServer.execSql(req.body.query, res, req.context?.securityContext, req.body.cache, req.body.timezone, req.body.throwContinueWait, req.context?.requestId);
-
-          if (req.body.includeLinks && req.context?.requestId) {
-            this.sqlServer.clearRequestOptions(req.context.requestId);
-          }
         } catch (e: any) {
-          if (req.body.includeLinks && req.context?.requestId) {
-            this.sqlServer.clearRequestOptions(req.context.requestId);
-          }
-
           // Quickfix for https://github.com/cube-js/cube/issues/10450,
           // Right now, it's too complicated to fix the issue correctly, because
           // native side control stream, without understanding that it's Express.response

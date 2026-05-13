@@ -43,8 +43,6 @@ export class SQLServer {
 
   protected readonly gatewayPort: number | undefined;
 
-  protected requestOptions: Map<string, Record<string, any>> = new Map();
-
   public constructor(
     protected readonly apiGateway: ApiGateway,
     options: SQLServerConstructorOptions,
@@ -80,21 +78,6 @@ export class SQLServer {
 
   public async execSql(sqlQuery: string, stream: any, securityContext?: any, cacheMode?: CacheMode, timezone?: string, throwContinueWait?: boolean, requestId?: string) {
     await execSql(this.getSqlInterfaceInstance(), sqlQuery, stream, securityContext, cacheMode, timezone, throwContinueWait, requestId);
-  }
-
-  public setRequestOption(requestId: string, key: string, value: any) {
-    if (!this.requestOptions.has(requestId)) {
-      this.requestOptions.set(requestId, {});
-    }
-    this.requestOptions.get(requestId)![key] = value;
-  }
-
-  public getRequestOption(requestId: string, key: string): any {
-    return this.requestOptions.get(requestId)?.[key];
-  }
-
-  public clearRequestOptions(requestId: string) {
-    this.requestOptions.delete(requestId);
   }
 
   public async sql4sql(sqlQuery: string, disablePostProcessing: boolean, securityContext?: unknown): Promise<Sql4SqlResponse> {
@@ -245,14 +228,12 @@ export class SQLServer {
       },
       sql: async ({ request, session, query, memberToAlias, expressionParams }) => {
         const context = await contextByRequest(request, session);
-        const includeLinks = this.getRequestOption(context.requestId, 'includeLinks');
-        const queryWithLinks = includeLinks ? { ...query, includeLinks: true } : query;
 
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
           try {
             await this.apiGateway.sql({
-              query: queryWithLinks,
+              query,
               memberToAlias,
               expressionParams,
               exportAnnotatedSql: true,

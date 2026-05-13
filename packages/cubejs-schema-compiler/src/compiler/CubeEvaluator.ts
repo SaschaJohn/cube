@@ -211,6 +211,7 @@ export class CubeEvaluator extends CubeSymbols {
     this.preparePreAggregations(cube, errorReporter);
     this.prepareMembers(cube.measures, cube, errorReporter);
     this.prepareMembers(cube.dimensions, cube, errorReporter);
+    this.prepareSyntheticLinkDimensions(cube);
     this.prepareMembers(cube.segments, cube, errorReporter);
 
     this.evaluateMultiStageReferences(cube.name, cube.measures);
@@ -298,6 +299,31 @@ export class CubeEvaluator extends CubeSymbols {
         }
         filter.unlessReferences = resolvedUnless;
       }
+    }
+  }
+
+  protected prepareSyntheticLinkDimensions(cube: any) {
+    if (!cube.dimensions) return;
+
+    const syntheticDims: Record<string, any> = {};
+
+    for (const [dimName, dimDef] of Object.entries<any>(cube.dimensions)) {
+      if (dimDef.links && Array.isArray(dimDef.links)) {
+        dimDef.links.forEach((link: any) => {
+          const syntheticName = `${dimName}___link_${link.name}_url`;
+          syntheticDims[syntheticName] = {
+            sql: link.url,
+            type: 'string',
+            synthetic: true,
+            ownedByCube: true,
+            public: false,
+          };
+        });
+      }
+    }
+
+    if (Object.keys(syntheticDims).length > 0) {
+      cube.dimensions = { ...cube.dimensions, ...syntheticDims };
     }
   }
 

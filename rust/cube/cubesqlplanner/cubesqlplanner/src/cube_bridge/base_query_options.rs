@@ -86,8 +86,6 @@ pub struct BaseQueryOptionsStatic {
     pub masked_members: Option<Vec<MaskedMemberItem>>,
     #[serde(rename = "memberToAlias", default)]
     pub member_to_alias: Option<HashMap<String, String>>,
-    #[serde(rename = "includeLinks")]
-    pub include_links: Option<bool>,
 }
 
 #[nativebridge::native_bridge(BaseQueryOptionsStatic, with_static_meta)]

@@ -34,7 +34,6 @@ pub struct QueryTools {
     evaluator_compiler: Rc<RefCell<Compiler>>,
     timezone: Tz,
     convert_tz_for_raw_time_dimension: bool,
-    include_links: bool,
     masked_members: HashSet<String>,
     // Compiled mask filters keyed by member full path. Populated in try_new
     // after the QueryTools Rc is constructed (FilterCompiler requires it),
@@ -51,7 +50,6 @@ impl QueryTools {
         timezone_name: Option<String>,
         export_annotated_sql: bool,
         convert_tz_for_raw_time_dimension: bool,
-        include_links: bool,
         masked_members: Option<Vec<MaskedMemberItem>>,
         member_to_alias: Option<HashMap<String, String>>,
     ) -> Result<Rc<Self>, CubeError> {
@@ -90,7 +88,6 @@ impl QueryTools {
             evaluator_compiler,
             timezone,
             convert_tz_for_raw_time_dimension,
-            include_links,
             masked_members: masked_set,
             member_mask_filters: RefCell::new(HashMap::new()),
         });
@@ -166,10 +163,6 @@ impl QueryTools {
 
     pub fn convert_tz_for_raw_time_dimension(&self) -> bool {
         self.convert_tz_for_raw_time_dimension
-    }
-
-    pub fn include_links(&self) -> bool {
-        self.include_links
     }
 
     pub fn join_for_hints(

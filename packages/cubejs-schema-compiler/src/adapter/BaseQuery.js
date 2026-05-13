@@ -286,7 +286,6 @@ export class BaseQuery {
       memberToAlias: this.options.memberToAlias,
       expressionParams: this.options.expressionParams,
       convertTzForRawTimeDimension: this.options.convertTzForRawTimeDimension,
-      includeLinks: this.options.includeLinks,
       from: this.options.from,
       multiStageQuery: this.options.multiStageQuery,
       multiStageDimensions: this.options.multiStageDimensions,
@@ -962,7 +961,6 @@ export class BaseQuery {
       convertTzForRawTimeDimension: !!this.options.convertTzForRawTimeDimension,
       maskedMembers: this.options.maskedMembers,
       memberToAlias: this.options.memberToAlias,
-      includeLinks: this.options.includeLinks,
     };
 
     try {
@@ -3185,11 +3183,7 @@ export class BaseQuery {
   }
 
   baseSelect() {
-    const columns = R.flatten(this.forSelect().map(s => s.selectColumns())).filter(s => !!s);
-    if (this.options.includeLinks) {
-      columns.push(...this.linkUrlSelectColumns());
-    }
-    return columns.join(', ');
+    return R.flatten(this.forSelect().map(s => s.selectColumns())).filter(s => !!s).join(', ');
   }
 
   selectAllDimensionsAndMeasures(measures) {
@@ -3211,29 +3205,6 @@ export class BaseQuery {
    */
   dimensionsForSelect() {
     return this.dimensions.concat(this.timeDimensions);
-  }
-
-  linkUrlSelectColumns() {
-    const columns = [];
-    for (const dim of this.dimensionsForSelect()) {
-      const dimPath = dim.dimension || (dim.path && dim.path().join('.'));
-      if (!dimPath) continue;
-
-      const cubeName = dim.path ? dim.path()[0] : dimPath.split('.')[0];
-      const dimDef = dim.dimensionDefinition ? dim.dimensionDefinition() : null;
-      if (!dimDef || !dimDef.links) continue;
-
-      dimDef.links.forEach((link, idx) => {
-        const urlSql = this.autoPrefixAndEvaluateSql(cubeName, link.url);
-        const alias = this.escapeColumnName(`${dimPath}___link_${idx}_url`);
-        columns.push(`${urlSql} ${alias}`);
-      });
-    }
-    return columns;
-  }
-
-  escapeString(str) {
-    return `'${str.replace(/'/g, "''")}'`;
   }
 
   dimensionSql(dimension) {
