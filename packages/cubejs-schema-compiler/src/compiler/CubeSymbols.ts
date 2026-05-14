@@ -723,9 +723,29 @@ export class CubeSymbols implements TranspilerSymbolResolver, CompilerInterface 
           .map((path) => path.split('.')[1])
           .filter(memberName => !(it.includes as (string | ViewCubeIncludeMember)[]).find((include) => ((typeof include === 'object' ? include.name : include)) === memberName));
 
+        // Auto-include synthetic link dimensions for any included dimension that has links
+        const syntheticLinkMembers: string[] = [];
+        const membersObj = this.symbols[cubeRef]?.cubeObj()?.dimensions || {};
+        for (const include of (it.includes as (string | ViewCubeIncludeMember)[])) {
+          const memberName = typeof include === 'object' ? include.name : include;
+          const dimDef = membersObj[memberName];
+          if (dimDef && dimDef.links && Array.isArray(dimDef.links)) {
+            for (const link of dimDef.links) {
+              if (link.name) {
+                const syntheticName = `${memberName}___link_${link.name}_url`;
+                if (membersObj[syntheticName]) {
+                  syntheticLinkMembers.push(syntheticName);
+                }
+              }
+            }
+          }
+        }
+
         return {
           ...it,
-          includes: (it.includes as (string | ViewCubeIncludeMember)[]).concat(currentCubeAutoIncludeMembers),
+          includes: (it.includes as (string | ViewCubeIncludeMember)[])
+            .concat(currentCubeAutoIncludeMembers)
+            .concat(syntheticLinkMembers.filter(m => !(it.includes as (string | ViewCubeIncludeMember)[]).find((inc) => ((typeof inc === 'object' ? inc.name : inc)) === m))),
         };
       }) : includedCubes;
 
