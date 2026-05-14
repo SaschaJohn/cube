@@ -312,6 +312,7 @@ const MaskSchema = Joi.alternatives([
 ]);
 
 const LinkItemSchema = Joi.object().keys({
+  name: Joi.string().required(),
   label: Joi.string().required(),
   url: Joi.func().required(),
   icon: Joi.string(),

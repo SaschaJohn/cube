@@ -52,6 +52,7 @@ export interface ExtendedCubeSymbolDefinition extends CubeSymbolDefinition {
   keyReference?: string;
   currency?: string;
   links?: Array<{
+    name: string;
     label: string;
     url: (...args: any[]) => string;
     icon?: string;
@@ -108,6 +109,7 @@ export type MeasureConfig = {
 };
 
 export type LinkConfig = {
+  name: string;
   label: string;
   icon?: string;
   target: 'blank' | 'self';
@@ -336,6 +338,7 @@ export class CubeToMetaTransformer implements CompilerInterface {
             order: extendedDimDef.order,
             key: extendedDimDef.keyReference,
             links: extendedDimDef.links ? extendedDimDef.links.map((link: any) => ({
+              name: link.name,
               label: link.label,
               icon: link.icon,
               target: link.target || 'blank',

@@ -17,11 +17,13 @@ cubes:
         sql: full_name
         type: string
         links:
-          - label: Search on Google
+          - name: google_search
+            label: Search on Google
             url: "CONCAT('https://www.google.com/search?q=', {CUBE}.full_name)"
             icon: brand-google
             target: blank
-          - label: Write an email
+          - name: email
+            label: Write an email
             url: "CONCAT('mailto:', {email})"
             icon: send
 
@@ -34,12 +36,12 @@ cubes:
     const compilers = prepareYamlCompiler(schemaWithLinks);
     await compilers.compiler.compile();
 
-    const fullNameDef = compilers.cubeEvaluator.dimensionByPath('users.full_name___link_0_url');
-    expect(fullNameDef).toBeDefined();
-    expect(fullNameDef.type).toBe('string');
-    expect((fullNameDef as any).synthetic).toBe(true);
+    const googleDef = compilers.cubeEvaluator.dimensionByPath('users.full_name___link_google_search_url');
+    expect(googleDef).toBeDefined();
+    expect(googleDef.type).toBe('string');
+    expect((googleDef as any).synthetic).toBe(true);
 
-    const emailDef = compilers.cubeEvaluator.dimensionByPath('users.full_name___link_1_url');
+    const emailDef = compilers.cubeEvaluator.dimensionByPath('users.full_name___link_email_url');
     expect(emailDef).toBeDefined();
     expect(emailDef.type).toBe('string');
     expect((emailDef as any).synthetic).toBe(true);
@@ -51,13 +53,13 @@ cubes:
 
     const query = new PostgresQuery(compilers, {
       measures: [],
-      dimensions: ['users.full_name', 'users.full_name___link_0_url'],
+      dimensions: ['users.full_name', 'users.full_name___link_google_search_url'],
     });
 
     const queryAndParams = query.buildSqlAndParams();
     const sql = queryAndParams[0];
 
-    expect(sql).toContain('"users__full_name___link_0_url"');
+    expect(sql).toContain('"users__full_name___link_google_search_url"');
     expect(sql).toContain('https://www.google.com/search?q=');
     expect(sql).toContain('"users".full_name');
   });
@@ -97,7 +99,7 @@ cubes:
     expect(fullNameDim!.links![0].target).toBe('blank');
 
     const syntheticDim = usersCube!.config.dimensions.find(
-      (d: any) => d.name === 'users.full_name___link_0_url'
+      (d: any) => d.name === 'users.full_name___link_google_search_url'
     );
     expect(syntheticDim).toBeDefined();
     expect(syntheticDim!.synthetic).toBe(true);
@@ -113,7 +115,7 @@ cubes:
     expect(usersCube).toBeDefined();
 
     const syntheticDim = usersCube!.config.dimensions.find(
-      (d: any) => d.name === 'users.full_name___link_0_url'
+      (d: any) => d.name === 'users.full_name___link_google_search_url'
     );
     expect(syntheticDim).toBeDefined();
     expect(syntheticDim!.public).toBe(false);
@@ -130,7 +132,8 @@ cubes:
         sql: full_name
         type: string
         links:
-          - url: "'https://example.com'"
+          - name: test
+            url: "'https://example.com'"
 `;
     const compilers = prepareYamlCompiler(invalidSchema);
 

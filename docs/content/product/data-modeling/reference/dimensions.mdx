@@ -301,7 +301,8 @@ They can be rendered as HTML links by supporting tools, e.g., [Workbooks][ref-wo
 Links are useful to let users navigate to related external resources (e.g., Google
 search), internal tools (e.g., Salesforce), or other pages in a BI tool.
 
-Each link must have a `label` and a `url`. The `url` is a SQL expression that constructs
+Each link must have a `name`, a `label`, and a `url`. The `name` is used as an identifier
+in the [synthetic dimension](#synthetic) name. The `url` is a SQL expression that constructs
 the link URL. It can [reference][ref-references] column and dimension values, just like
 the [`sql` parameter](#sql) or [`mask` parameter](#mask).
 
@@ -322,16 +323,19 @@ cubes:
         sql: full_name
         type: string
         links:
-          - label: Search on Google
+          - name: google_search
+            label: Search on Google
             url: "CONCAT('https://www.google.com/search?q=', {CUBE}.full_name)"
             icon: brand-google
             target: blank
           
-          - label: Search in Salesforce
+          - name: salesforce_search
+            label: Search in Salesforce
             url: "CONCAT('https://your-company.salesforce.com/search/results/?q=', {email})"
             target: blank
 
-          - label: Write an email
+          - name: send_email
+            label: Write an email
             url: "CONCAT('mailto:', {email})"
             icon: send
 ```
@@ -366,7 +370,8 @@ cubes:
         sql: full_name
         type: string
         links:
-          - label: Check performance dashboard
+          - name: performance
+            label: Check performance dashboard
             url: "'https://my-account.cubecloud.dev/new/d/123/dashboards/KSqDYdUz6Ble'"
             params:
               # Pass dimension values as query parameters
@@ -376,12 +381,14 @@ cubes:
               # Pass additional parameters, if needed
               utm_source: cube
 
-          - label: Check another dashboard
+          - name: another_dashboard
+            label: Check another dashboard
             url: "'https://my-account.cubecloud.dev/new/d/456/dashboards/iuZjHd8h5mKLe'"
             # Don't pass any filters from the current query
             propagate_filters_to_params: false
 
-          - label: Check one more dashboard
+          - name: one_more_dashboard
+            label: Check one more dashboard
             url: "'https://my-account.cubecloud.dev/new/d/456/dashboards/iuZjHd8h5mKLe'"
             # Pass all filters from the current query as the `my_precious_filters` query parameter
             param_name_for_filters: my_precious_filters
@@ -390,10 +397,9 @@ cubes:
 #### Dimensions
 
 Each link will be rendered as an additional [synthetic](#synthetic) dimension in the
-result set, with the following naming convention, where `<id>` is a zero-based index of
-the link in the `links` array:
+result set, with the following naming convention:
 
-- `<dimension_name>___link_<id>_url`
+- `<dimension_name>___link_<link_name>_url`
 
 <InfoBox>
 

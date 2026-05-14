@@ -33,6 +33,7 @@ export type SegmentDefinition = {
 };
 
 export type LinkDefinition = {
+  name: string;
   label: string;
   url: (...args: any[]) => string;
   icon?: string;
