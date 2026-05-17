@@ -211,8 +211,8 @@ export class CubeEvaluator extends CubeSymbols {
     this.prepareJoins(cube, errorReporter);
     this.preparePreAggregations(cube, errorReporter);
     this.prepareMembers(cube.measures, cube, errorReporter);
-    this.prepareMembers(cube.dimensions, cube, errorReporter);
     this.prepareSyntheticLinkDimensions(cube);
+    this.prepareMembers(cube.dimensions, cube, errorReporter);
     this.prepareMembers(cube.segments, cube, errorReporter);
 
     this.evaluateMultiStageReferences(cube.name, cube.measures);
