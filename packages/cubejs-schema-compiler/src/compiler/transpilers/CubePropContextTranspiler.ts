@@ -41,6 +41,7 @@ export const transpiledFieldsPatterns: Array<RegExp> = [
   /^filters\.[0-9]+\.values$/,
   /^filters\.[0-9]+\.unless$/,
   /^(measures|dimensions)\.[_a-zA-Z][_a-zA-Z0-9]*\.mask\.sql$/,
+  /^dimensions\.[_a-zA-Z][_a-zA-Z0-9]*\.links\.[0-9]+\.url$/,
 ];
 
 export const transpiledFields: Set<String> = new Set<String>();

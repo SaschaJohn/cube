@@ -337,7 +337,7 @@ export class CubeToMetaTransformer implements CompilerInterface {
                 : undefined,
             order: extendedDimDef.order,
             key: extendedDimDef.keyReference,
-            links: extendedDimDef.links ? extendedDimDef.links.map((link: any) => ({
+            ...(extendedDimDef.links ? { links: extendedDimDef.links.map((link: any) => ({
               name: link.name,
               label: link.label,
               icon: link.icon,
@@ -345,8 +345,8 @@ export class CubeToMetaTransformer implements CompilerInterface {
               params: link.params,
               propagate_filters_to_params: link.propagate_filters_to_params !== false,
               param_name_for_filters: link.param_name_for_filters || 'filters',
-            })) : undefined,
-            synthetic: extendedDimDef.synthetic || undefined,
+            })) } : {}),
+            ...(extendedDimDef.synthetic ? { synthetic: true } : {}),
           };
         }),
         segments: Object.entries(extendedCube.segments || {}).map((nameToSegment: [string, any]) => {

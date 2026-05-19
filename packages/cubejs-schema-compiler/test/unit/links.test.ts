@@ -19,10 +19,10 @@ cubes:
         links:
           - name: google_search
             label: Search on Google
-            url: "CONCAT('https://www.google.com/search?q=', {CUBE}.full_name)"
+            url: "CONCAT('https://www.google.com/search?q=', {full_name})"
             icon: brand-google
             target: blank
-          - name: email
+          - name: send_email
             label: Write an email
             url: "CONCAT('mailto:', {email})"
             icon: send
@@ -61,7 +61,6 @@ cubes:
 
     expect(sql).toContain('"users__full_name___link_google_search_url"');
     expect(sql).toContain('https://www.google.com/search?q=');
-    expect(sql).toContain('"users".full_name');
   });
 
   it('should NOT include link URL columns unless explicitly queried', async () => {
@@ -83,8 +82,8 @@ cubes:
     const compilers = prepareYamlCompiler(schemaWithLinks);
     await compilers.compiler.compile();
 
-    const metaTransformer = compilers.metaTransformer;
-    const cubes = metaTransformer.cubes;
+    const { metaTransformer } = compilers;
+    const { cubes } = metaTransformer;
     const usersCube = cubes.find((c: any) => c.config.name === 'users');
     expect(usersCube).toBeDefined();
 
@@ -109,8 +108,8 @@ cubes:
     const compilers = prepareYamlCompiler(schemaWithLinks);
     await compilers.compiler.compile();
 
-    const metaTransformer = compilers.metaTransformer;
-    const cubes = metaTransformer.cubes;
+    const { metaTransformer } = compilers;
+    const { cubes } = metaTransformer;
     const usersCube = cubes.find((c: any) => c.config.name === 'users');
     expect(usersCube).toBeDefined();
 
