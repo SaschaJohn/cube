@@ -19,12 +19,12 @@ cubes:
         links:
           - name: google_search
             label: Search on Google
-            url: "CONCAT('https://www.google.com/search?q=', {full_name})"
+            url: "'https://www.google.com/search?q=' || {full_name}"
             icon: brand-google
             target: blank
           - name: send_email
             label: Write an email
-            url: "CONCAT('mailto:', {email})"
+            url: "'mailto:' || {email}"
             icon: send
 
       - name: email
