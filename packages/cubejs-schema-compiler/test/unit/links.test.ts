@@ -41,7 +41,7 @@ cubes:
     expect(googleDef.type).toBe('string');
     expect((googleDef as any).synthetic).toBe(true);
 
-    const emailDef = compilers.cubeEvaluator.dimensionByPath('users.full_name___link_email_url');
+    const emailDef = compilers.cubeEvaluator.dimensionByPath('users.full_name___link_send_email_url');
     expect(emailDef).toBeDefined();
     expect(emailDef.type).toBe('string');
     expect((emailDef as any).synthetic).toBe(true);
