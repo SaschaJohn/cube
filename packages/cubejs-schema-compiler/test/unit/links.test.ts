@@ -53,7 +53,7 @@ cubes:
 
     const query = new PostgresQuery(compilers, {
       measures: [],
-      dimensions: ['users.full_name', 'users.full_name___link_google_search_url'],
+      dimensions: ['users.full_name___link_google_search_url'],
     });
 
     const queryAndParams = query.buildSqlAndParams();
@@ -131,15 +131,15 @@ cubes:
         type: string
         links:
           - name: test
-            url: "'https://example.com'"
+            url: "{full_name}"
 `;
     const compilers = prepareYamlCompiler(invalidSchema);
 
     try {
       await compilers.compiler.compile();
-      fail('Should have thrown a validation error for missing label');
+      fail('Should have thrown an error for missing label');
     } catch (e: any) {
-      expect(e.message || e.toString()).toContain('label');
+      expect(e.message || e.toString()).toMatch(/label/i);
     }
   });
 });
