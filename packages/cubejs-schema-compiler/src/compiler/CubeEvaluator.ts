@@ -306,14 +306,12 @@ export class CubeEvaluator extends CubeSymbols {
   protected prepareSyntheticLinkDimensions(cube: any) {
     if (!cube.dimensions) return;
 
-    const syntheticDims: Record<string, any> = {};
-
     for (const [dimName, dimDef] of Object.entries<any>(cube.dimensions)) {
       if (dimDef.links && Array.isArray(dimDef.links)) {
         dimDef.links.forEach((link: any) => {
           const linkName = typeof link.name === 'function' ? link.name() : link.name;
           const syntheticName = `${dimName}___link_${linkName}_url`;
-          syntheticDims[syntheticName] = {
+          cube.dimensions[syntheticName] = {
             sql: link.url,
             type: 'string',
             synthetic: true,
@@ -322,10 +320,6 @@ export class CubeEvaluator extends CubeSymbols {
           };
         });
       }
-    }
-
-    if (Object.keys(syntheticDims).length > 0) {
-      cube.dimensions = { ...cube.dimensions, ...syntheticDims };
     }
   }
 
