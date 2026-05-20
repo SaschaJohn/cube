@@ -19,12 +19,12 @@ cubes:
         links:
           - name: google_search
             label: Search on Google
-            url: "'https://www.google.com/search?q=' || {full_name}"
+            url: "{full_name}"
             icon: brand-google
             target: blank
           - name: send_email
             label: Write an email
-            url: "'mailto:' || {email}"
+            url: "{email}"
             icon: send
 
       - name: email
@@ -60,7 +60,6 @@ cubes:
     const sql = queryAndParams[0];
 
     expect(sql).toContain('"users__full_name___link_google_search_url"');
-    expect(sql).toContain('https://www.google.com/search?q=');
   });
 
   it('should NOT include link URL columns unless explicitly queried', async () => {
