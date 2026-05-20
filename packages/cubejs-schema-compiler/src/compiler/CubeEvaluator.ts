@@ -311,7 +311,8 @@ export class CubeEvaluator extends CubeSymbols {
     for (const [dimName, dimDef] of Object.entries<any>(cube.dimensions)) {
       if (dimDef.links && Array.isArray(dimDef.links)) {
         dimDef.links.forEach((link: any) => {
-          const syntheticName = `${dimName}___link_${link.name}_url`;
+          const linkName = typeof link.name === 'function' ? link.name() : link.name;
+          const syntheticName = `${dimName}___link_${linkName}_url`;
           syntheticDims[syntheticName] = {
             sql: link.url,
             type: 'string',
