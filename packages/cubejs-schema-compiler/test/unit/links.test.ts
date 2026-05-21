@@ -98,7 +98,7 @@ cubes:
     expect(syntheticDim!.synthetic).toBe(true);
   });
 
-  it('synthetic link dimensions should not be public by default', async () => {
+  it('synthetic link dimensions should be public by default', async () => {
     const compilers = prepareYamlCompiler(schemaWithLinks);
     await compilers.compiler.compile();
 
@@ -111,7 +111,7 @@ cubes:
       (d: any) => d.name === 'users.full_name___link_google_search_url'
     );
     expect(syntheticDim).toBeDefined();
-    expect(syntheticDim!.public).toBe(false);
+    expect(syntheticDim!.public).toBe(true);
   });
 
   it('should validate links schema - label is required', async () => {
@@ -136,5 +136,156 @@ cubes:
     } catch (e: any) {
       expect(e.message || e.toString()).toMatch(/label/i);
     }
+  });
+
+  describe('access policy on view with links', () => {
+    const schemaWithViewAndPolicy = `
+cubes:
+  - name: users
+    sql_table: users
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: full_name
+        sql: full_name
+        type: string
+        links:
+          - name: google_search
+            label: Search on Google
+            url: "{full_name}"
+            icon: brand-google
+
+      - name: email
+        sql: email
+        type: string
+
+views:
+  - name: users_view
+    cubes:
+      - join_path: users
+        includes:
+          - full_name
+          - email
+    access_policy:
+      - role: "*"
+        member_level:
+          includes:
+            - full_name
+            - full_name___link_google_search_url
+`;
+
+    it('should include synthetic link dim when explicitly listed in access policy', async () => {
+      const compilers = prepareYamlCompiler(schemaWithViewAndPolicy);
+      await compilers.compiler.compile();
+
+      const viewCube = compilers.cubeEvaluator.cubeFromPath('users_view');
+      expect(viewCube).toBeDefined();
+
+      const policy = viewCube.accessPolicy[0];
+      expect(policy.memberLevel.includesMembers).toContain('users_view.full_name');
+      expect(policy.memberLevel.includesMembers).toContain('users_view.full_name___link_google_search_url');
+    });
+
+    const schemaWithViewPolicyExcludeLink = `
+cubes:
+  - name: users
+    sql_table: users
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: full_name
+        sql: full_name
+        type: string
+        links:
+          - name: google_search
+            label: Search on Google
+            url: "{full_name}"
+            icon: brand-google
+
+      - name: email
+        sql: email
+        type: string
+
+views:
+  - name: users_view
+    cubes:
+      - join_path: users
+        includes:
+          - full_name
+          - email
+    access_policy:
+      - role: "*"
+        member_level:
+          includes:
+            - full_name
+            - email
+`;
+
+    it('should exclude synthetic link dim when not listed in access policy includes', async () => {
+      const compilers = prepareYamlCompiler(schemaWithViewPolicyExcludeLink);
+      await compilers.compiler.compile();
+
+      const viewCube = compilers.cubeEvaluator.cubeFromPath('users_view');
+      expect(viewCube).toBeDefined();
+
+      const policy = viewCube.accessPolicy[0];
+      expect(policy.memberLevel.includesMembers).toContain('users_view.full_name');
+      expect(policy.memberLevel.includesMembers).toContain('users_view.email');
+      expect(policy.memberLevel.includesMembers).not.toContain('users_view.full_name___link_google_search_url');
+    });
+
+    const schemaWithViewPolicyWildcard = `
+cubes:
+  - name: users
+    sql_table: users
+
+    dimensions:
+      - name: id
+        sql: id
+        type: number
+        primary_key: true
+
+      - name: full_name
+        sql: full_name
+        type: string
+        links:
+          - name: google_search
+            label: Search on Google
+            url: "{full_name}"
+            icon: brand-google
+
+      - name: email
+        sql: email
+        type: string
+
+views:
+  - name: users_view
+    cubes:
+      - join_path: users
+        includes: "*"
+    access_policy:
+      - role: "*"
+        member_level:
+          includes: "*"
+`;
+
+    it('should include synthetic link dim when access policy uses wildcard includes', async () => {
+      const compilers = prepareYamlCompiler(schemaWithViewPolicyWildcard);
+      await compilers.compiler.compile();
+
+      const viewCube = compilers.cubeEvaluator.cubeFromPath('users_view');
+      expect(viewCube).toBeDefined();
+
+      const policy = viewCube.accessPolicy[0];
+      expect(policy.memberLevel.includesMembers).toContain('users_view.full_name___link_google_search_url');
+    });
   });
 });

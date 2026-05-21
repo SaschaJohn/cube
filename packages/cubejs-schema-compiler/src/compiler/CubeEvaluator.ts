@@ -316,7 +316,7 @@ export class CubeEvaluator extends CubeSymbols {
             type: 'string',
             synthetic: true,
             ownedByCube: true,
-            public: false,
+            public: true,
           };
         });
       }
