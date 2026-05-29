@@ -633,7 +633,8 @@
                   "recipes/pre-aggregations/disabling-pre-aggregations",
                   "recipes/pre-aggregations/using-originalsql-and-rollups-effectively",
                   "recipes/pre-aggregations/refreshing-select-partitions",
-                  "recipes/pre-aggregations/joining-multiple-data-sources"
+                  "recipes/pre-aggregations/joining-multiple-data-sources",
+                  "recipes/pre-aggregations/mixed-refresh-cadences-rollup-join"
                 ]
               },
               {
@@ -678,6 +679,10 @@
   },
   "navbar": {
     "links": [
+      {
+        "label": "Changelog",
+        "href": "https://cube.dev/changelog"
+      },
       {
         "label": "Community",
         "href": "https://slack.cube.dev"
@@ -815,6 +820,22 @@
     {
       "source": "/admin/deployment/vpc/gcp/byoc",
       "destination": "/admin/deployment/dedicated/gcp/byoc"
+    },
+    {
+      "source": "/docs/deployment/cloud/deployment-types",
+      "destination": "/admin/deployment/deployment-types"
+    },
+    {
+      "source": "/docs/deployment/cloud/auto-suspension",
+      "destination": "/admin/deployment/auto-suspension"
+    },
+    {
+      "source": "/docs/deployment/cloud/limits",
+      "destination": "/admin/deployment/limits"
+    },
+    {
+      "source": "/docs/deployment/cloud/scalability",
+      "destination": "/admin/deployment/scalability"
     }
   ]
 }
